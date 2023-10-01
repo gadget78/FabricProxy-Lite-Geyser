@@ -12,6 +12,18 @@ group = project.maven_group
 
 repositories {
 	mavenCentral()
+	maven {
+		url 'https://repo.opencollab.dev/maven-releases'
+		mavenContent {
+			releasesOnly()
+		}
+	}
+	maven {
+		url 'https://repo.opencollab.dev/maven-snapshots'
+		mavenContent {
+			snapshotsOnly()
+		}
+	}
 }
 
 dependencies {
@@ -27,6 +39,9 @@ dependencies {
 
 	modImplementation "com.moandjiezana.toml:toml4j:0.7.2"
 	include "com.moandjiezana.toml:toml4j:0.7.2"
+
+	compileOnly "org.geysermc.floodgate:api:2.2.2-SNAPSHOT"
+	compileOnly "org.geysermc.geyser:api:2.2.0-SNAPSHOT"
 }
 
 processResources {

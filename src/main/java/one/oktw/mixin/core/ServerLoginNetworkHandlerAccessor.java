@@ -13,5 +13,8 @@ public interface ServerLoginNetworkHandlerAccessor {
     void setProfile(GameProfile profile);
 
     @Accessor
+    GameProfile getProfile();
+
+    @Accessor
     ClientConnection getConnection();
 }

@@ -12,23 +12,30 @@ import net.minecraft.server.network.ServerLoginNetworkHandler;
 import net.minecraft.text.Text;
 import one.oktw.mixin.core.ClientConnection_AddressAccessor;
 import one.oktw.mixin.core.ServerLoginNetworkHandlerAccessor;
+import one.oktw.utils.PlatformUtil;
 import org.apache.logging.log4j.LogManager;
 
-import java.util.Optional;
+import java.util.UUID;
 
 class PacketHandler {
     private final ModConfig config;
+    private final PlatformUtil platformUtil;
 
-    PacketHandler(ModConfig config) {
+    PacketHandler(ModConfig config, PlatformUtil platformUtil) {
         this.config = config;
+        this.platformUtil = platformUtil;
     }
 
     void handleVelocityPacket(MinecraftServer server, ServerLoginNetworkHandler handler, boolean understood, PacketByteBuf buf, ServerLoginNetworking.LoginSynchronizer synchronizer, PacketSender ignored) {
-        if (!understood) {
-            handler.disconnect(Text.of(config.getAbortedMessage()));
+        if (understood) {
+            this.javaLogin(server, handler, buf, synchronizer);
             return;
         }
 
+        handler.disconnect(Text.of(config.getAbortedMessage()));
+    }
+
+    private void javaLogin(MinecraftServer server, ServerLoginNetworkHandler handler, PacketByteBuf buf, ServerLoginNetworking.LoginSynchronizer synchronizer) {
         synchronizer.waitFor(server.submit(() -> {
             try {
                 if (!VelocityLib.checkIntegrity(buf)) {
@@ -55,10 +62,33 @@ class PacketHandler {
             }
 
             if (config.getHackEarlySend()) {
-                handler.onHello(new LoginHelloC2SPacket(profile.getName(), Optional.of(profile.getId())));
+                handler.onHello(new LoginHelloC2SPacket(profile.getName(), profile.getId()));
             }
 
             ((ServerLoginNetworkHandlerAccessor) handler).setProfile(profile);
         }));
     }
+
+    public void bedrockLogin(MinecraftServer server, ServerLoginNetworkHandler handler, ServerLoginNetworking.LoginSynchronizer synchronizer, String name, long xuid) {
+        synchronizer.waitFor(server.submit(() -> {
+            UUID playerUUID = new UUID(0, xuid);
+
+            String playerName = name;
+            if (!playerName.startsWith(this.platformUtil.getBedrockPlayerPrefix())) {
+                playerName = this.platformUtil.getBedrockPlayerPrefix() + playerName;
+            }
+            //Java only allows 16 characters and probably shouldn't have spaces
+            playerName = playerName.replace(" ", "_");
+            if (playerName.length() > 16) {
+                playerName = playerName.substring(0, 16);
+            }
+
+            GameProfile profile = new GameProfile(playerUUID, playerName);
+
+            //TODO: Get skin from Geyser API
+
+            ((ServerLoginNetworkHandlerAccessor) handler).setProfile(profile);
+        }));
+    }
+
 }

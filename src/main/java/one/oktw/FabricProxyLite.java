@@ -6,6 +6,10 @@ import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.fabric.api.networking.v1.ServerLoginConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerLoginNetworking;
 import net.fabricmc.loader.api.FabricLoader;
+import one.oktw.mixin.core.ServerLoginNetworkHandlerAccessor;
+import one.oktw.utils.FloodgateUtil;
+import one.oktw.utils.GeyserUtil;
+import one.oktw.utils.PlatformUtil;
 import org.apache.logging.log4j.LogManager;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
@@ -22,12 +26,36 @@ import static one.oktw.VelocityLib.PLAYER_INFO_PACKET;
 public class FabricProxyLite implements DedicatedServerModInitializer, IMixinConfigPlugin {
     public static ModConfig config;
 
+    private static PlatformUtil platformUtil = null;
+    private static PacketHandler velocityHandler;
+
     @Override
     public void onInitializeServer() {
+        //Check if any geyser stuff is installed
+        if (FabricLoader.getInstance().isModLoaded("floodgate")) {
+            platformUtil = new FloodgateUtil();
+        } else if (FabricLoader.getInstance().isModLoaded("geyser-fabric")) {
+            platformUtil = new GeyserUtil();
+        }
+
+        velocityHandler = new PacketHandler(config, platformUtil);
+
         // Packet receiver
-        ServerLoginNetworking.registerGlobalReceiver(PLAYER_INFO_CHANNEL, new PacketHandler(config)::handleVelocityPacket);
+        ServerLoginNetworking.registerGlobalReceiver(PLAYER_INFO_CHANNEL, velocityHandler::handleVelocityPacket);
         if (!config.getHackEarlySend()) {
-            ServerLoginConnectionEvents.QUERY_START.register((handler, server, sender, synchronizer) -> sender.sendPacket(PLAYER_INFO_CHANNEL, PLAYER_INFO_PACKET));
+            ServerLoginConnectionEvents.QUERY_START.register((handler, server, sender, synchronizer) -> {
+                if (platformUtil != null) {
+                    String name = ((ServerLoginNetworkHandlerAccessor) handler).getProfile().getName();
+                    Long xuid = platformUtil.getXuid(name);
+
+                    if (xuid != null) {
+                        velocityHandler.bedrockLogin(server, handler, synchronizer, name, xuid);
+                        return;
+                    }
+                }
+
+                sender.sendPacket(PLAYER_INFO_CHANNEL, PLAYER_INFO_PACKET);
+            });
         }
     }
 

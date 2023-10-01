@@ -29,9 +29,9 @@ public class ServerLoginNetworkHandler_EarlySendPacket {
 
     @Inject(method = "onHello", at = @At(value = "HEAD"), cancellable = true)
     private void skipKeyPacket(LoginHelloC2SPacket packet, CallbackInfo ci) {
-        if (profile != null && profile.isComplete()) return; // Already receive profile form velocity.
+        if (profile != null && profile.getName() != null && profile.getId() != null) return; // Already receive profile form velocity.
 
-        connection.send(new LoginQueryRequestS2CPacket(ThreadLocalRandom.current().nextInt(), PLAYER_INFO_CHANNEL, PLAYER_INFO_PACKET));
+        connection.send(new LoginQueryRequestS2CPacket(PLAYER_INFO_PACKET));
         ci.cancel();
     }
 }
