@@ -53,7 +53,6 @@ public class VelocityLib {
         if (binarySearch(SUPPORTED_FORWARDING_VERSION, version) < 0) {
             throw new IllegalStateException("Unsupported forwarding version " + version + ", supported " + Arrays.toString(SUPPORTED_FORWARDING_VERSION));
         }
-
     }
 
     public static InetAddress readAddress(final PacketByteBuf buf) {

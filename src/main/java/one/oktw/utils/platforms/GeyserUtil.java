@@ -1,4 +1,4 @@
-package one.oktw.utils;
+package one.oktw.utils.platforms;
 
 import org.geysermc.api.connection.Connection;
 import org.geysermc.geyser.api.GeyserApi;

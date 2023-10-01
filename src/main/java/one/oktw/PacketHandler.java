@@ -1,6 +1,7 @@
 package one.oktw;
 
 import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.fabricmc.fabric.api.networking.v1.ServerLoginNetworking;
 
@@ -12,7 +13,8 @@ import net.minecraft.server.network.ServerLoginNetworkHandler;
 import net.minecraft.text.Text;
 import one.oktw.mixin.core.ClientConnection_AddressAccessor;
 import one.oktw.mixin.core.ServerLoginNetworkHandlerAccessor;
-import one.oktw.utils.PlatformUtil;
+import one.oktw.utils.GeyserSkinGetter;
+import one.oktw.utils.platforms.PlatformUtil;
 import org.apache.logging.log4j.LogManager;
 
 import java.util.UUID;
@@ -32,7 +34,16 @@ class PacketHandler {
             return;
         }
 
-        handler.disconnect(Text.of(config.getAbortedMessage()));
+        if (this.platformUtil != null) {
+            String name = ((ServerLoginNetworkHandlerAccessor) handler).getProfile().getName();
+            Long xuid = platformUtil.getXuid(name);
+            if (xuid != null) {
+                this.bedrockLogin(server, handler, synchronizer, name, xuid);
+                return;
+            }
+        }
+
+        //handler.disconnect(Text.of(config.getAbortedMessage()));
     }
 
     private void javaLogin(MinecraftServer server, ServerLoginNetworkHandler handler, PacketByteBuf buf, ServerLoginNetworking.LoginSynchronizer synchronizer) {
@@ -69,7 +80,7 @@ class PacketHandler {
         }));
     }
 
-    public void bedrockLogin(MinecraftServer server, ServerLoginNetworkHandler handler, ServerLoginNetworking.LoginSynchronizer synchronizer, String name, long xuid) {
+    private void bedrockLogin(MinecraftServer server, ServerLoginNetworkHandler handler, ServerLoginNetworking.LoginSynchronizer synchronizer, String name, long xuid) {
         synchronizer.waitFor(server.submit(() -> {
             UUID playerUUID = new UUID(0, xuid);
 
@@ -85,10 +96,13 @@ class PacketHandler {
 
             GameProfile profile = new GameProfile(playerUUID, playerName);
 
-            //TODO: Get skin from Geyser API
+            GeyserSkinGetter.SkinData skinData = GeyserSkinGetter.getSkin(xuid);
+            if (skinData != null) {
+                profile.getProperties().removeAll("textures");
+                profile.getProperties().put("textures", new Property("textures", skinData.value, skinData.signature));
+            }
 
             ((ServerLoginNetworkHandlerAccessor) handler).setProfile(profile);
         }));
     }
-
 }

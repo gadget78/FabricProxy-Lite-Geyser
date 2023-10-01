@@ -1,4 +1,4 @@
-package one.oktw.utils;
+package one.oktw.utils.platforms;
 
 import org.geysermc.floodgate.api.FloodgateApi;
 

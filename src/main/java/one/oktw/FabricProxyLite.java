@@ -6,10 +6,9 @@ import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.fabric.api.networking.v1.ServerLoginConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerLoginNetworking;
 import net.fabricmc.loader.api.FabricLoader;
-import one.oktw.mixin.core.ServerLoginNetworkHandlerAccessor;
-import one.oktw.utils.FloodgateUtil;
-import one.oktw.utils.GeyserUtil;
-import one.oktw.utils.PlatformUtil;
+import one.oktw.utils.platforms.FloodgateUtil;
+import one.oktw.utils.platforms.GeyserUtil;
+import one.oktw.utils.platforms.PlatformUtil;
 import org.apache.logging.log4j.LogManager;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
@@ -44,16 +43,6 @@ public class FabricProxyLite implements DedicatedServerModInitializer, IMixinCon
         ServerLoginNetworking.registerGlobalReceiver(PLAYER_INFO_CHANNEL, velocityHandler::handleVelocityPacket);
         if (!config.getHackEarlySend()) {
             ServerLoginConnectionEvents.QUERY_START.register((handler, server, sender, synchronizer) -> {
-                if (platformUtil != null) {
-                    String name = ((ServerLoginNetworkHandlerAccessor) handler).getProfile().getName();
-                    Long xuid = platformUtil.getXuid(name);
-
-                    if (xuid != null) {
-                        velocityHandler.bedrockLogin(server, handler, synchronizer, name, xuid);
-                        return;
-                    }
-                }
-
                 sender.sendPacket(PLAYER_INFO_CHANNEL, PLAYER_INFO_PACKET);
             });
         }

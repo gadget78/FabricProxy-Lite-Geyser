@@ -1,6 +1,7 @@
 package one.oktw.mixin.hack;
 
 import com.mojang.authlib.GameProfile;
+import net.fabricmc.fabric.impl.networking.payload.PacketByteBufLoginQueryRequestPayload;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.packet.c2s.login.LoginHelloC2SPacket;
 import net.minecraft.network.packet.s2c.login.LoginQueryRequestS2CPacket;
@@ -31,7 +32,7 @@ public class ServerLoginNetworkHandler_EarlySendPacket {
     private void skipKeyPacket(LoginHelloC2SPacket packet, CallbackInfo ci) {
         if (profile != null && profile.getName() != null && profile.getId() != null) return; // Already receive profile form velocity.
 
-        connection.send(new LoginQueryRequestS2CPacket(PLAYER_INFO_PACKET));
+        connection.send(new LoginQueryRequestS2CPacket(ThreadLocalRandom.current().nextInt(), new PacketByteBufLoginQueryRequestPayload(PLAYER_INFO_CHANNEL, PLAYER_INFO_PACKET)));
         ci.cancel();
     }
 }
