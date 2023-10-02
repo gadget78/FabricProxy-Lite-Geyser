@@ -43,7 +43,7 @@ class PacketHandler {
             }
         }
 
-        //handler.disconnect(Text.of(config.getAbortedMessage()));
+        handler.disconnect(Text.of(config.getAbortedMessage()));
     }
 
     private void javaLogin(MinecraftServer server, ServerLoginNetworkHandler handler, PacketByteBuf buf, ServerLoginNetworking.LoginSynchronizer synchronizer) {
