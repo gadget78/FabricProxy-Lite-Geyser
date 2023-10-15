@@ -1,7 +1,8 @@
 # FabricProxy-Lite
 
-Same as [FabricProxy](https://github.com/OKTW-Network/FabricProxy) but only support velocity and using Fabric-API handle
-velocity packet.
+Same as [FabricProxy](https://github.com/OKTW-Network/FabricProxy) 
+but only support velocity and using Fabric-API handle
+velocity packet. with tweaks for geyser
 
 This will have the better compatibility with other mods.
 
